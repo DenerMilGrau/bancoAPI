@@ -1,0 +1,20 @@
+ ○ A realizar
+     - historico de emprestimo por usuario ✅
+     - atualização de informações
+     - alterar status do livro ao emprestar ✅
+
+     - #criar status do emprestimo (atrasado ou nao) #DESCARTADO
+        - #alterar status ao a data atual passar da data_devolucao
+
+     DELETE E EDIT
+
+     •Documentar a API
+     •Alterar codigos http (ta tudo 400 ou 200)
+
+ ○ Realizado
+    - read (livros, emprestimo e usuario)
+    - cadastro (usuarios, livros e emprestimos)
+
+ ♦ Observações
+    - Para renovar um empréstimo deve ser cadastrada outro emprestimo
+        e através da lógica, verificar, manter e alterar informações (data_devolucao)
