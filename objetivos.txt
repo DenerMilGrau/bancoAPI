@@ -1,6 +1,6 @@
  ○ A realizar
      - historico de emprestimo por usuario ✅
-     - atualização de informações
+     - atualização de informações✅
      - alterar status do livro ao emprestar ✅
 
      - #criar status do emprestimo (atrasado ou nao) #DESCARTADO
@@ -14,6 +14,8 @@
  ○ Realizado
     - read (livros, emprestimo e usuario)
     - cadastro (usuarios, livros e emprestimos)
+    - atualizar (usuarios e livros)
+
 
  ♦ Observações
     - Para renovar um empréstimo deve ser cadastrada outro emprestimo
