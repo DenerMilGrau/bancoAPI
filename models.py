@@ -8,10 +8,11 @@ from sqlalchemy.orm import scoped_session, sessionmaker, declarative_base, relat
 engine = create_engine('sqlite:///base_biblioteca.sqlite3')
 
 #gerenciar sessao com banco de dados.
-db_session = scoped_session(sessionmaker(bind=engine))
+#db_session = scoped_session(sessionmaker(bind=engine)) antigo
+local_session = sessionmaker(bind=engine)
 
 Base = declarative_base()
-Base.query = db_session.query_property()
+#Base.query = db_session.query_property()
 
 class Usuario(Base):
     __tablename__ = 'usuario'
@@ -23,9 +24,13 @@ class Usuario(Base):
     def __repr__(self):
         return '<Usuario(id={}, nome={})>'.format(self.id, self.nome)
 
-    def save(self):
-        db_session.add(self)
-        db_session.commit()
+    def save(self, db_session):
+        try:
+            db_session.add(self)
+            db_session.commit()
+        except:
+            db_session.rollback()
+            raise
 
     def delete(self):
         db_session.delete(self)
@@ -105,6 +110,10 @@ class Emprestimo(Base):
             'ID_livro': self.ID_livro,
         }
         return dados_emprestimo
+
+class UsuarioInativo(Base):
+    __tablename__ = 'usuario_inativo'
+
 
 def init_db():
     Base.metadata.create_all(bind=engine)

@@ -2,7 +2,7 @@ from flask import Flask, jsonify, redirect, request
 from flask_pydantic_spec import FlaskPydanticSpec
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from models import db_session, Livro, Emprestimo, Usuario
+from models import local_session, Livro, Emprestimo, Usuario
 from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy
 from sqlalchemy.exc import IntegrityError
@@ -20,15 +20,28 @@ def index():
     """
         API para gerenciar uma biblioteca integrada a um banco de dados
 
-
-
     """
     return redirect('/livros')
 @app.route('/livros', methods=['GET'])
 @app.route('/livros/<status>', methods=['GET'])
 def get_livros(status=None):
+    """
+        Consultar livros
 
+        ### Endpoint:
+            GET /livros
+            GET /livros/<status>
 
+        ### Parâmetros:
+        - `status` **(str)**: **string para ser convertida a boolean**
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** com a lista de livros e dados
+        - **JSON** com a lista de livros e dados que possuam o `status` igual ao recebido de parâmetro
+    """
 
     try:
         if status is None:
@@ -56,35 +69,83 @@ def get_livros(status=None):
 @app.route('/usuarios', methods=['GET'])
 @app.route('/usuarios/<id_user>', methods=['GET'])
 def get_usuarios(id_user=None):
-    try:
-        if id_user is None:
-            sql = select(Usuario)
-            sql_executar = db_session.execute(sql).scalars()
-            result = []
-            for usuario in sql_executar:
-                result.append(usuario.serialize_usuario())
-            return jsonify({'result': result})
-        else:
-            id_usuario = int(id_user)
-            sql = select(Emprestimo, Usuario, Livro).join(
-                Usuario, Emprestimo.ID == Usuario.id).join(
-                Livro, Emprestimo.ID_livro == Livro.id_livro
-            ).where(Usuario.id == id_usuario)
-            sql_executar = db_session.execute(sql).scalars()
-            result = []
-            for i in sql_executar:
-                result.append(i.serialize_emprestimo())
-            if result:
-                return jsonify({'result': result})
-            else:
-                return jsonify({'result': 'Não existem dados referente a esse usuario'})
+    """
+        Consultar usuários
 
+        ### Endpoint:
+            GET /usuarios
+            GET /usuarios/<id_user>
+
+        ### Parâmetros:
+        - `id_user` **(str)**: **string para ser convertida a inteiro**
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** com a lista de usuários e dados
+    """
+    try:
+        sql = select(Usuario)
+        sql_executar = db_session.execute(sql).scalars()
+        result = []
+        for usuario in sql_executar:
+            result.append(usuario.serialize_usuario())
+        return jsonify({'result': result})
     except ValueError:
         return jsonify({'result': 'Error. Erro de Valor'})
 
 
+@app.route('/emprestimos/<id_user>', methods=['GET'])
+def get_emprestimos_user(id_user):
+    """
+            Consultar emprestimos por usuario
+
+            ### Endpoint:
+                GET /emprestimos/<id_user>
+
+            ### Parâmetros:
+            - `id_user` **(str)**: **string para ser convertida a inteiro**
+
+            ### Erros possíveis:
+            - **Bad Request**: *status code* **400**
+
+            ### Retorna:
+            - **JSON** com a lista de emprestimos realizados pelo usuario
+        """
+
+    try:
+        id_usuario = int(id_user)
+        sql = select(Emprestimo, Usuario, Livro).join(
+            Usuario, Emprestimo.ID == Usuario.id).join(
+            Livro, Emprestimo.ID_livro == Livro.id_livro
+        ).where(Usuario.id == id_usuario)
+        sql_executar = db_session.execute(sql).scalars()
+        result = []
+        for i in sql_executar:
+            result.append(i.serialize_emprestimo())
+        if result:
+            return jsonify({'result': result})
+        else:
+            return jsonify({'result': 'Não existem dados referente a esse usuario'})
+    except ValueError:
+        return jsonify({'result': 'Error. Erro de Valor'})
+
 @app.route('/emprestimos', methods=['GET'])
 def get_emprestimos():
+    """
+        Consultar emprestimos
+
+        ### Endpoint:
+            GET /emprestimos
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** com a lista de emprestimos
+    """
+
     try:
         lista_emprestimos_sql = select(Emprestimo).join(
             Livro, Emprestimo.ID_livro == Livro.id_livro).join(
@@ -103,6 +164,19 @@ def get_emprestimos():
 
 @app.route('/usuarios', methods=['POST'])
 def novo_usuario():
+    """
+        Cadastrar usuario
+
+        ### Endpoint:
+            POST /usuarios
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** mensagem de **sucesso**
+    """
+    db_session = local_session()
     try:
         dados_usuario = request.get_json()
         nome = dados_usuario['nome']
@@ -119,14 +193,31 @@ def novo_usuario():
                 raise TypeError
             else:
                 post = Usuario(nome=nome, cpf=cpf_f, telefone=telefone)
-                post.save()
+                post.save(db_session)
                 db_session.close()
                 return jsonify({'result': 'Usuario criado com sucesso!'}), 200
     except TypeError:
         return jsonify({'result': 'Error. Integrity Error (faltam informações ou informações corretas) '}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        db_session.close()
 
 @app.route('/emprestimos', methods=['POST'])
 def novo_emprestimo():
+    """
+        Cadastrar emprestimos
+
+        ### Endpoint:
+            POST /emprestimos
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** mensagem de **sucesso**
+    """
+
     json_dados_emprestimo = request.get_json()
     data_emprestimo = json_dados_emprestimo['data_emprestimo']
     usuario_id = json_dados_emprestimo['id_usuario']
@@ -196,7 +287,18 @@ def novo_emprestimo():
 
 @app.route('/livros', methods=['POST'])
 def novo_livro():
+    """
+        Cadastrar livros
 
+        ### Endpoint:
+            POST /livros
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** mensagem de **sucesso**
+    """
     try:
         json_dados_livro = request.get_json()
         titulo = json_dados_livro['titulo']
@@ -222,6 +324,22 @@ def novo_livro():
 
 @app.route('/usuarios/<id_user>', methods=['PUT'])
 def editar_usuarios(id_user):
+    """
+        Editar usuarios
+
+        ### Endpoint:
+            PUT /usuarios/<id_user>
+
+        ### Parâmetros:
+        - `id_user` **(str)**: **string para ser convertida a inteiro**
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** mensagem de **sucesso**
+    """
+
     try:
         id_usuario = id_user
         usuario_sql = select(Usuario).where(Usuario.id == id_usuario)
@@ -288,6 +406,22 @@ def editar_usuarios(id_user):
 
 @app.route('/livros/<id_livro>', methods=['PUT'])
 def editar_livros(id_livro):
+    """
+        Editar livros
+
+        ### Endpoint:
+            PUT /livros/<id_livro>
+
+        ### Parâmetros:
+        - `id_livro` **(str)**: **string para ser convertida a inteiro**
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** mensagem de **sucesso**
+    """
+
     try:
         id_livro = id_livro
         livro_sql = select(Livro).where(Livro.id_livro == id_livro)
@@ -343,6 +477,22 @@ def editar_livros(id_livro):
 
 @app.route('/emprestimos/<id_emp>', methods=['PUT'])
 def editar_emprestimos(id_emp):
+    """
+        Editar emprestimos
+
+        ### Endpoint:
+            PUT /emprestimos/<id_emp>
+
+        ### Parâmetros:
+        - `id_emp` **(str)**: **string para ser convertida a inteiro**
+
+        ### Erros possíveis:
+        - **Bad Request**: *status code* **400**
+
+        ### Retorna:
+        - **JSON** mensagem de **sucesso**
+    """
+
     try:
         id_emprestimo = id_emp
         emprestimo_sql = select(Emprestimo, Usuario, Livro).join(
