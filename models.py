@@ -20,6 +20,7 @@ class Usuario(Base):
     nome = Column(String, nullable=False)
     cpf = Column(String, nullable=False, unique=True)
     telefone = Column(String, nullable=False)
+    usuario_ativo = Column(Boolean, nullable=False, index=True, default=True)
 
     def __repr__(self):
         return '<Usuario(id={}, nome={})>'.format(self.id, self.nome)
@@ -32,9 +33,9 @@ class Usuario(Base):
             db_session.rollback()
             raise
 
-    def delete(self):
-        db_session.delete(self)
-        db_session.commit()
+    # def delete(self):
+    #     db_session.delete(self)
+    #     db_session.commit()
 
     def serialize_usuario(self):
         dados_usuario = {
@@ -42,6 +43,7 @@ class Usuario(Base):
             'nome': self.nome,
             'cpf': self.cpf,
             'telefone': self.telefone,
+            'usuario_ativo': self.usuario_ativo,
         }
         return dados_usuario
 
@@ -53,17 +55,22 @@ class Livro(Base):
     autor = Column(String, nullable=False, index=True)
     status_emprestado = Column(Boolean, nullable=False, index=True, default=False)
     descricao = Column(String)
+    livro_ativo = Column(Boolean, nullable=False, index=True, default=True)
+
 
     def __repr__(self):
         return 'id_livro={}, titulo={}'.format(self.id_livro, self.titulo)
 
-    def save(self):
-        db_session.add(self)
-        db_session.commit()
-
-    def delete(self):
-        db_session.delete(self)
-        db_session.commit()
+    def save(self, db_session):
+        try:
+            db_session.add(self)
+            db_session.commit()
+        except:
+            db_session.rollback()
+            raise
+    # def delete(self):
+    #     db_session.delete(self)
+    #     db_session.commit()
 
     def serialize_livro(self):
         dados_livro = {
@@ -73,6 +80,7 @@ class Livro(Base):
             'autor': self.autor,
             'descricao': self.descricao,
             'status_emprestado': self.status_emprestado,
+            'livro_ativo': self.livro_ativo,
         }
         return dados_livro
 
@@ -92,13 +100,17 @@ class Emprestimo(Base):
         return '<id_emprestimo={}, id_livro={}, id_usuario={}>'.format(self.id_emprestimo,
                                                                        self.ID_livro,
                                                                        self.ID)
-    def save(self):
-        db_session.add(self)
-        db_session.commit()
+    def save(self, db_session):
+        try:
+            db_session.add(self)
+            db_session.commit()
+        except:
+            db_session.rollback()
+            raise
 
-    def delete(self):
-        db_session.delete(self)
-        db_session.commit()
+    # def delete(self):
+    #     db_session.delete(self)
+    #     db_session.commit()
 
     def serialize_emprestimo(self):
         dados_emprestimo = {
@@ -110,9 +122,6 @@ class Emprestimo(Base):
             'ID_livro': self.ID_livro,
         }
         return dados_emprestimo
-
-class UsuarioInativo(Base):
-    __tablename__ = 'usuario_inativo'
 
 
 def init_db():
