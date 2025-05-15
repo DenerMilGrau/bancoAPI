@@ -22,8 +22,8 @@ def index():
 
     """
     return redirect('/livros')
-@app.route('/livros', methods=['GET'])
-@app.route('/livros/<status>', methods=['GET'])
+@app.route('/livros', methods=['GET']) # Qualquer um
+@app.route('/livros/<status>', methods=['GET']) # Qualquer um
 def get_livros(status=None):
     """
         Consultar livros
@@ -70,7 +70,7 @@ def get_livros(status=None):
 
 
 
-@app.route('/usuarios', methods=['GET'])
+@app.route('/usuarios', methods=['GET']) # Qualquer um
 # @app.route('/usuarios/<id_user>', methods=['GET'])
 def get_usuarios():
     """
@@ -105,7 +105,7 @@ def get_usuarios():
         db_session.close()
 
 
-@app.route('/emprestimos/<id_user>', methods=['GET'])
+@app.route('/emprestimos/<id_user>', methods=['GET']) # Administradores
 def get_emprestimos_user(id_user):
     """
             Consultar emprestimos por usuario
@@ -143,7 +143,7 @@ def get_emprestimos_user(id_user):
     finally:
         db_session.close()
 
-@app.route('/emprestimos', methods=['GET'])
+@app.route('/emprestimos', methods=['GET']) # Administradores
 def get_emprestimos():
     """
         Consultar emprestimos
@@ -176,7 +176,7 @@ def get_emprestimos():
         db_session.close()
 
 
-@app.route('/usuarios', methods=['POST'])
+@app.route('/usuarios', methods=['POST']) # Administradores
 def novo_usuario():
     """
         Cadastrar usuario
@@ -215,7 +215,7 @@ def novo_usuario():
     finally:
         db_session.close()
 
-@app.route('/emprestimos', methods=['POST'])
+@app.route('/emprestimos', methods=['POST']) # Administradores
 def novo_emprestimo():
     """
         Cadastrar emprestimos
@@ -310,7 +310,7 @@ def novo_emprestimo():
     finally:
         db_session.close()
 
-@app.route('/livros', methods=['POST'])
+@app.route('/livros', methods=['POST']) # Administradores
 def novo_livro():
     """
         Cadastrar livros
@@ -349,7 +349,7 @@ def novo_livro():
     finally:
         db_session.close()
 
-@app.route('/usuarios/<id_user>', methods=['PUT'])
+@app.route('/usuarios/<id_user>', methods=['PUT']) # Administradores
 def editar_usuarios(id_user):
     """
         Editar usuarios
@@ -442,7 +442,7 @@ def editar_usuarios(id_user):
 
 
 
-@app.route('/livros/<id_livro>', methods=['PUT'])
+@app.route('/livros/<id_livro>', methods=['PUT']) # Administradores
 def editar_livros(id_livro):
     """
         Editar livros
@@ -515,7 +515,7 @@ def editar_livros(id_livro):
         db_session.close()
 
 
-@app.route('/emprestimos/<id_emp>', methods=['PUT'])
+@app.route('/emprestimos/<id_emp>', methods=['PUT']) # Administradores
 def editar_emprestimos(id_emp):
     """
         Editar emprestimos
@@ -566,8 +566,6 @@ def editar_emprestimos(id_emp):
         return jsonify({"error": str(e)}), 400
     finally:
         db_session.close()
-
-
 
 
 if __name__ == '__main__':

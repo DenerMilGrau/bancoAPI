@@ -1,8 +1,7 @@
 #importar biblioteca.
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Boolean, Date
-
 #importar session e sessionmaker.
-from sqlalchemy.orm import scoped_session, sessionmaker, declarative_base, relationship, Relationship
+from sqlalchemy.orm import sessionmaker, declarative_base, Relationship
 
 #configurar a conexão de banco.
 engine = create_engine('sqlite:///base_biblioteca.sqlite3')
