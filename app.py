@@ -2,6 +2,8 @@ from flask import Flask, jsonify, redirect, request
 from flask_pydantic_spec import FlaskPydanticSpec
 from datetime import date
 from dateutil.relativedelta import relativedelta
+from werkzeug.exceptions import BadRequest
+
 from models import local_session, Livro, Emprestimo, Usuario
 # from flask_sqlalchemy import SQLAlchemy
 # import sqlalchemy
@@ -68,8 +70,26 @@ def get_livros(status=None):
     finally:
         db_session.close()
 
-
-
+@app.route('/livros/livro_ativo<status_livro_inativo>', methods=['GET'])
+def get_livros_by_livro_ativo(status_livro_inativo):
+    db_session = local_session()
+    try:
+        if status_livro_inativo in ['1', 1, 'True', True]:
+            status = True
+        elif status_livro_inativo in ['0', 0, 'False', False]:
+            status = False
+        else:
+            raise BadRequest('Status livro inativo invalido')
+        sql = select(Livro).where(Livro.livro_ativo == status)
+        livros = db_session.execute(sql).scalars()
+        lista = []
+        for l in livros:
+            lista.append(l.serialize_livro())
+        return jsonify({'result': lista})
+    except Exception as e:
+        return jsonify({'error': f'{e}'}), 400
+    finally:
+        db_session.close()
 @app.route('/usuarios', methods=['GET']) # Qualquer um
 # @app.route('/usuarios/<id_user>', methods=['GET'])
 def get_usuarios():
