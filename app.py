@@ -50,9 +50,9 @@ def get_livros(status=None):
         if status is None:
             lista_livros_sql = select(Livro)
         else:
-            if status in ['1', 1, 'True', True]:
+            if status in ['1', 1, 'True', True, 'true']:
                 status_emprestimo = True
-            elif status in ['0', 0, 'False', False]:
+            elif status in ['0', 0, 'False', False, 'false']:
                 status_emprestimo = False
             else:
                 return jsonify({'result': 'Error. Requisitado uma variável inesperada'}), 400
@@ -589,4 +589,4 @@ def editar_emprestimos(id_emp):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
