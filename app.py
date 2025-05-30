@@ -587,6 +587,10 @@ def editar_emprestimos(id_emp):
     finally:
         db_session.close()
 
+    print('teste git')
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
+
+# teste de push git
