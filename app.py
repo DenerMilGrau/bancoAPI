@@ -23,9 +23,11 @@ def index():
         API para gerenciar uma biblioteca integrada a um banco de dados
 
     """
-    return redirect('/livros')
+    # return redirect('/livros')
+    return 'texto' 
+
 @app.route('/livros', methods=['GET']) # Qualquer um
-@app.route('/livros/<status>', methods=['GET']) # Qualquer um
+@app.route('/livros/status<status>', methods=['GET']) # Qualquer um
 def get_livros(status=None):
     """
         Consultar livros
@@ -70,13 +72,13 @@ def get_livros(status=None):
     finally:
         db_session.close()
 
-@app.route('/livros/livro_ativo<status_livro_inativo>', methods=['GET'])
-def get_livros_by_livro_ativo(status_livro_inativo):
+@app.route('/livros/livro_ativo<status_livro_ativo>', methods=['GET'])
+def get_livros_by_livro_ativo(status_livro_ativo):
     db_session = local_session()
     try:
-        if status_livro_inativo in ['1', 1, 'True', True]:
+        if status_livro_ativo in ['1', 1, 'True', True]:
             status = True
-        elif status_livro_inativo in ['0', 0, 'False', False]:
+        elif status_livro_ativo in ['0', 0, 'False', False]:
             status = False
         else:
             raise BadRequest('Status livro inativo invalido')
@@ -90,6 +92,26 @@ def get_livros_by_livro_ativo(status_livro_inativo):
         return jsonify({'error': f'{e}'}), 400
     finally:
         db_session.close()
+
+@app.route('/livros/id<id_livro>', methods=['GET']) # DOCUMENTACAO !!!
+def get_livros_by_id_livro(id_livro):
+    db_session = local_session()
+    try:
+        sql = select(Livro).where(Livro.id_livro == id_livro)
+        livro = db_session.execute(sql).scalar()
+
+        if not livro:
+            raise BadRequest('Id do livro não encontrado')
+
+        # lista = []
+        # for l in livro:
+        #     lista.append(l.serialize_livro())
+        return jsonify({'result': livro.serialize_livro()})
+    except Exception as e:
+        return jsonify({'error': f'{e}'}), 400
+    finally:
+        db_session.close()
+
 @app.route('/usuarios', methods=['GET']) # Qualquer um
 # @app.route('/usuarios/<id_user>', methods=['GET'])
 def get_usuarios():
@@ -124,8 +146,25 @@ def get_usuarios():
     finally:
         db_session.close()
 
+@app.route('/usuarios/id<id>') # DOCUMENTACAO !!!
+def get_usuario_by_id(id):
+    db_session = local_session()
 
-@app.route('/emprestimos/<id_user>', methods=['GET']) # Administradores
+    try:
+        sql = select(Usuario).where(Usuario.id == id)
+        usuario = db_session.execute(sql).scalar()
+        if not usuario:
+            raise BadRequest('Usuário com id inserido não encontrado')
+        # result = []
+        # for u in usuario:
+        #     result.append(u.serialize_usuario())
+        return jsonify({'result': usuario.serialize_usuario()})
+    except Exception as e:
+        return jsonify({'error': f'{e}'}), 400
+    finally:
+        db_session.close()
+
+@app.route('/emprestimos/user<id_user>', methods=['GET']) # Administradores
 def get_emprestimos_user(id_user):
     """
             Consultar emprestimos por usuario
@@ -195,6 +234,34 @@ def get_emprestimos():
     finally:
         db_session.close()
 
+@app.route('/emprestimos/id<id_emprestimo>', methods=['GET']) # Administradores
+def get_emprestimo_by_id_emprestimo(id_emprestimo):
+    db_session = local_session()
+    try:
+        lista_emprestimos_sql = select(Emprestimo).where(Emprestimo.id_emprestimo == id_emprestimo)
+        emprestimo = db_session.execute(lista_emprestimos_sql).scalar()
+
+        sql_livro = select(Livro).where(Livro.id_livro == emprestimo.ID_livro)
+        livro = db_session.execute(sql_livro).scalar()
+
+        sql_user = select(Usuario).where(Usuario.id == emprestimo.ID)
+        usuario = db_session.execute(sql_user).scalar()
+
+        if not emprestimo or not livro or not usuario:
+            raise BadRequest('Emprestimo com id inserido não encontrado')
+
+        # result = []
+        # for e in emprestimo:
+        #     result.append(e.serialize_emprestimo())
+        emprestimo = emprestimo.serialize_emprestimo()
+        usuario = usuario.serialize_usuario()
+        livro = livro.serialize_livro()
+
+        return jsonify({'result': {'livro':livro, 'usuario':usuario, 'emprestimo':emprestimo}})
+    except Exception as e:
+        return jsonify({'error': f'{e}'}), 400
+    finally:
+        db_session.close()
 
 @app.route('/usuarios', methods=['POST']) # Administradores
 def novo_usuario():

@@ -11,6 +11,12 @@
      •Documentar a API
      •Alterar codigos http (ta tudo 400 ou 200)
 
+     ♦ get_livro - id_livro
+     ♦ get_usuario - status_ativo
+     ♦ get_usuario- id_usuario
+     ♦ get_emprestimo - id_emprestmo
+     ♦ get_emprestimo - status_finalizado
+
  ○ Realizado
     - read (livros, emprestimo e usuario)
     - cadastro (usuarios, livros e emprestimos)
